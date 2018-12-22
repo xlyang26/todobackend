@@ -1,0 +1,38 @@
+version: '2.4'
+
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+  release:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: todobackend.settings_release
+      MYSQL_HOST: db
+      MYSQL_USER: todo
+      MYSQL_PASSWORD: password
+    command:
+      - uwsgi
+      - --http=0.0.0.0:8000
+      - --module=todobackend.wsgi
+      - --master
+  db:
+    image: mysql:5.7
+    healthcheck:
+      test: mysqlshow -u $$MYSQL_USER -p$$MYSQL_PASSWORD
+      interval: 3s
+      retries: 10
+    environment:
+      MYSQL_DATABASE: todobackend
+      MYSQL_USER: todo
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
