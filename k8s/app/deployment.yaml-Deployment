@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todobackend
+  labels:
+    app: todobackend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todobackend
+  template:
+    metadata:
+      labels:
+        app: todobackend
+    spec:
+      containers:
+      - name: todobackend
+        image: 422152100797.dkr.ecr.us-west-1.amazonaws.com/dckr-in-aws/todobackend
+        imagePullPolicy: IfNotPresent
+        readinessProbe:
+          httpGet:
+            port: 8000
+        livenessProbe:
+          httpGet:
+            port: 8000
+        command:
+        - uwsgi
+        - --http=0.0.0.0:8000
+        - --module=todobackend.wsgi
+        - --master
+        - --die-on-term
+        - --processes=4
+        - --threads=2
+        - --check-static=/public
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: todobackend.settings_release
